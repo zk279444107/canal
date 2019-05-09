@@ -1,0 +1,14 @@
+dataSourceKey: tradeDS
+destination: trade
+groupId: g1
+esMapping:
+  _index: bbg_orders
+  _type: _doc
+  _id: _id
+  upsert: true
+#  pk: order_id
+  sql: "select a.order_id as _id,a.order_id,a.shop_id,a.member_id,a.member_name,a.ship_name,a.ship_addr from bbg_b2c_orders a"
+#  objFields:
+#    _labels: array:;
+  etlCondition: "where order_id>='{0}' and order_id<'{1}'"
+  commitBatch: 3000

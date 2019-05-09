@@ -16,7 +16,8 @@ import com.alibaba.otter.canal.client.adapter.support.OuterAdapterConfig;
 public class Common {
 
     public static ESAdapter init() {
-        DatasourceConfig.DATA_SOURCES.put("defaultDS", TestConstant.dataSource);
+//        DatasourceConfig.DATA_SOURCES.put("defaultDS", TestConstant.dataSource);
+        DatasourceConfig.DATA_SOURCES.put("tradeDS", TestConstant.dataSource);
 
         OuterAdapterConfig outerAdapterConfig = new OuterAdapterConfig();
         outerAdapterConfig.setName("es");

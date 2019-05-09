@@ -232,7 +232,7 @@ public class ESAdapter implements OuterAdapter {
             .setSize(0)
             .get();
 
-        long rowCount = response.getHits().getTotalHits();
+        long rowCount = response.getHits().getTotalHits().value;
         Map<String, Object> res = new LinkedHashMap<>();
         res.put("esIndex", mapping.get_index());
         res.put("count", rowCount);
