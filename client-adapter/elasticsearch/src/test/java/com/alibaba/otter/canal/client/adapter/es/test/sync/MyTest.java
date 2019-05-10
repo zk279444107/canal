@@ -57,7 +57,42 @@ public class MyTest {
 		configMap.put("trade", config);
 		esAdapter.getEsSyncService().sync(configMap.values(), dml);
 
-		GetResponse response = esAdapter.getTransportClient().prepareGet("mytest_user", "_doc", "1").get();
+		GetResponse response = esAdapter.getTransportClient().prepareGet("bbg_orders", "_doc", "171452802001").get();
 		Assert.assertEquals("Eric", response.getSource().get("_name"));
+	}
+	
+	/**
+	 * 单表插入
+	 */
+	@Test
+	public void test02() {
+		String ss = "{\"data\":[{\"id\":24547,\"channel\":\"JD\",\"sku_bn\":\"105824727\",\"sku_name\":\"贝涛8寸玩偶\",\"safety_stock\":null,\"out_sku_id\":2021770360,\"out_shop_category_id\":4638359,\"out_shop_category_name\":\"日用家纺\",\"out_first_category_id\":21929,\"out_first_category_name\":\"玩具\",\"out_second_category_id\":21930,\"out_second_category_name\":\"毛绒玩具\",\"out_third_category_id\":21938,\"out_third_category_name\":\"其他毛绒\",\"out_brand_id\":35247,\"out_brand_name\":\"其他品牌\",\"serial_no\":103405,\"remark\":\"\",\"gmt_create\":1547626872147,\"gmt_modified\":1557476580018,\"available\":\"A\"}],\"database\":\"bbg_plat_goods\",\"destination\":\"goods\",\"es\":1557476580000,\"groupId\":null,\"isDdl\":false,\"old\":[{\"serial_no\":103403,\"gmt_modified\":1557476280016}],\"pkNames\":[\"id\"],\"sql\":\"\",\"table\":\"gc_channel_sku\",\"ts\":1557505390327,\"type\":\"UPDATE\"}";
+		Dml dml = JSON.parseObject(ss, Dml.class);
+
+		String database = dml.getDatabase();
+		String table = dml.getTable();
+		Map<String, ESSyncConfig> esSyncConfigs = esAdapter.getDbTableEsSyncConfig().get(database + "-" + table);
+
+		Map<String, ESSyncConfig> configMap = ESSyncConfigLoader.load(null);
+		
+		ESSyncConfig config = new ESSyncConfig();
+		config.setDataSourceKey("goodsDS");
+		config.setDestination("goods");
+		config.setGroupId("g2");
+		
+		ESMapping esMapping = new ESMapping();
+		esMapping.set_index("channel_goods");
+		esMapping.set_type("_doc");
+		esMapping.set_id("_id");
+		esMapping.setUpsert(true);
+		esMapping.setSql("select concat(a.md_code,'_',a.product_bn,'_',a.channel) as _id,a.id as channel_product_id,a.product_bn,a.md_code,a.channel,a.normal_price,b.id as channel_prompt_product_id,b.prompt_price,b.prompt_code,b.bill_no,c.id as channel_sku_id,c.sku_name from gc_channel_product a left join gc_channel_prompt_product b on a.md_code = b.md_code and a.channel = b.channel and a.product_bn = b.product_bn left join gc_channel_sku c on a.product_bn = c.sku_bn and a.channel = c.channel");
+		esMapping.setEtlCondition("where channel_product_id>='{0}' and channel_product_id<'{1}'");
+		esMapping.setCommitBatch(3000);
+		esMapping.setSchemaItem(SqlParser.parse(esMapping.getSql()));
+		config.setEsMapping(esMapping);
+//		SqlParser.parse(config.getEsMapping().getSql());
+		configMap.put("goods", config);
+		esAdapter.getEsSyncService().sync(configMap.values(), dml);
+
 	}
 }
