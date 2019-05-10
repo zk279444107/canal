@@ -10,6 +10,9 @@ import org.junit.Test;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.otter.canal.client.adapter.es.ESAdapter;
 import com.alibaba.otter.canal.client.adapter.es.config.ESSyncConfig;
+import com.alibaba.otter.canal.client.adapter.es.config.ESSyncConfig.ESMapping;
+import com.alibaba.otter.canal.client.adapter.es.config.ESSyncConfigLoader;
+import com.alibaba.otter.canal.client.adapter.es.config.SqlParser;
 import com.alibaba.otter.canal.client.adapter.support.Dml;
 
 public class MyTest {
@@ -33,7 +36,26 @@ public class MyTest {
 		String table = dml.getTable();
 		Map<String, ESSyncConfig> esSyncConfigs = esAdapter.getDbTableEsSyncConfig().get(database + "-" + table);
 
-		esAdapter.getEsSyncService().sync(esSyncConfigs.values(), dml);
+		Map<String, ESSyncConfig> configMap = ESSyncConfigLoader.load(null);
+		
+		ESSyncConfig config = new ESSyncConfig();
+		config.setDataSourceKey("tradeDS");
+		config.setDestination("trade");
+		config.setGroupId("g1");
+		
+		ESMapping esMapping = new ESMapping();
+		esMapping.set_index("bbg_orders");
+		esMapping.set_type("_doc");
+		esMapping.set_id("_id");
+		esMapping.setUpsert(true);
+		esMapping.setSql("select a.order_id as _id,a.order_id,a.shop_id,a.member_id,a.member_name,a.ship_name,a.ship_addr from bbg_b2c_orders a");
+		esMapping.setEtlCondition("where order_id>='{0}' and order_id<'{1}'");
+		esMapping.setCommitBatch(3000);
+		esMapping.setSchemaItem(SqlParser.parse(esMapping.getSql()));
+		config.setEsMapping(esMapping);
+//		SqlParser.parse(config.getEsMapping().getSql());
+		configMap.put("trade", config);
+		esAdapter.getEsSyncService().sync(configMap.values(), dml);
 
 		GetResponse response = esAdapter.getTransportClient().prepareGet("mytest_user", "_doc", "1").get();
 		Assert.assertEquals("Eric", response.getSource().get("_name"));
