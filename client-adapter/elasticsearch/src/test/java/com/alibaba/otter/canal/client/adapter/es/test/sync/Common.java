@@ -17,7 +17,9 @@ public class Common {
 
     public static ESAdapter init() {
         DatasourceConfig.DATA_SOURCES.put("defaultDS", TestConstant.dataSource);
-
+        DatasourceConfig.DATA_SOURCES.put("tradeDS", TestConstant.dataSource);
+        DatasourceConfig.DATA_SOURCES.put("goodsDS", TestConstant.goods_dataSource);
+        
         OuterAdapterConfig outerAdapterConfig = new OuterAdapterConfig();
         outerAdapterConfig.setName("es");
         outerAdapterConfig.setHosts(TestConstant.esHosts);

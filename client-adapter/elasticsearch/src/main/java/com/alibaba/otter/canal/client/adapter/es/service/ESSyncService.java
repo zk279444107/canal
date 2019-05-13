@@ -747,6 +747,7 @@ public class ESSyncService {
                         }
                     }
 
+                    Object idVal = null;
                     Map<String, Object> paramsTmp = new LinkedHashMap<>();
                     for (Map.Entry<FieldItem, List<FieldItem>> entry : tableItem.getRelationTableFields().entrySet()) {
                         for (FieldItem fieldItem : entry.getValue()) {
@@ -756,6 +757,7 @@ public class ESSyncService {
                             // 判断是否是主键
                             if (fieldName.equals(mapping.get_id())) {
                                 fieldName = "_id";
+                                idVal = value;
                             }
                             paramsTmp.put(fieldName, value);
                         }
@@ -768,7 +770,12 @@ public class ESSyncService {
                             dml.getTable(),
                             mapping.get_index());
                     }
-                    esTemplate.updateByQuery(config, paramsTmp, esFieldData);
+                    
+                    if(idVal != null) {
+                    	esTemplate.update(mapping, idVal, esFieldData);
+                    }else {
+                    	esTemplate.updateByQuery(config, paramsTmp, esFieldData);
+                    }
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
