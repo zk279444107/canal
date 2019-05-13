@@ -709,37 +709,43 @@ public class ESSyncService {
                     Map<String, Object> esFieldData = new LinkedHashMap<>();
                     for (FieldItem fieldItem : tableItem.getRelationSelectFieldItems()) {
                         if (old != null) {
-                            // 从表子查询
-                            out: for (FieldItem fieldItem1 : tableItem.getSubQueryFields()) {
-                                for (ColumnItem columnItem0 : fieldItem.getColumnItems()) {
-                                    if (fieldItem1.getFieldName().equals(columnItem0.getColumnName()))
-                                        for (ColumnItem columnItem : fieldItem1.getColumnItems()) {
-                                            if (old.containsKey(columnItem.getColumnName())) {
-                                                Object val = esTemplate.getValFromRS(mapping,
-                                                    rs,
-                                                    fieldItem.getFieldName(),
-                                                    fieldItem.getFieldName());
-                                                esFieldData.put(fieldItem.getFieldName(), val);
-                                                break out;
-                                            }
-                                        }
-                                }
-                            }
-                            // 从表非子查询
-                            for (FieldItem fieldItem1 : tableItem.getRelationSelectFieldItems()) {
-                                if (fieldItem1.equals(fieldItem)) {
-                                    for (ColumnItem columnItem : fieldItem1.getColumnItems()) {
-                                        if (old.containsKey(columnItem.getColumnName())) {
-                                            Object val = esTemplate.getValFromRS(mapping,
-                                                rs,
-                                                fieldItem.getFieldName(),
-                                                fieldItem.getFieldName());
-                                            esFieldData.put(Util.cleanColumn(fieldItem.getFieldName()), val);
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
+							if (mapping.isForceUpdate()) {
+								Object val = esTemplate.getValFromRS(mapping, rs, fieldItem.getFieldName(),
+										fieldItem.getFieldName());
+								esFieldData.put(Util.cleanColumn(fieldItem.getFieldName()), val);
+							} else {
+	                            // 从表子查询
+	                            out: for (FieldItem fieldItem1 : tableItem.getSubQueryFields()) {
+	                                for (ColumnItem columnItem0 : fieldItem.getColumnItems()) {
+	                                    if (fieldItem1.getFieldName().equals(columnItem0.getColumnName()))
+	                                        for (ColumnItem columnItem : fieldItem1.getColumnItems()) {
+	                                            if (old.containsKey(columnItem.getColumnName())) {
+	                                                Object val = esTemplate.getValFromRS(mapping,
+	                                                    rs,
+	                                                    fieldItem.getFieldName(),
+	                                                    fieldItem.getFieldName());
+	                                                esFieldData.put(fieldItem.getFieldName(), val);
+	                                                break out;
+	                                            }
+	                                        }
+	                                }
+	                            }
+	                            // 从表非子查询
+	                            for (FieldItem fieldItem1 : tableItem.getRelationSelectFieldItems()) {
+	                                if (fieldItem1.equals(fieldItem)) {
+	                                    for (ColumnItem columnItem : fieldItem1.getColumnItems()) {
+	                                        if (old.containsKey(columnItem.getColumnName())) {
+	                                            Object val = esTemplate.getValFromRS(mapping,
+	                                                rs,
+	                                                fieldItem.getFieldName(),
+	                                                fieldItem.getFieldName());
+	                                            esFieldData.put(Util.cleanColumn(fieldItem.getFieldName()), val);
+	                                            break;
+	                                        }
+	                                    }
+	                                }
+	                            }
+                        	}
                         } else {
                             Object val = esTemplate
                                 .getValFromRS(mapping, rs, fieldItem.getFieldName(), fieldItem.getFieldName());
@@ -771,7 +777,7 @@ public class ESSyncService {
                             mapping.get_index());
                     }
                     
-                    if(idVal != null) {
+                    if(mapping.isForceUpdate() && idVal != null) {
                     	esTemplate.update(mapping, idVal, esFieldData);
                     }else {
                     	esTemplate.updateByQuery(config, paramsTmp, esFieldData);

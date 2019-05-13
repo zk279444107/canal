@@ -103,6 +103,8 @@ public class ESSyncConfig implements AdapterConfig {
         private Long                         syncInterval;                           // 同步时间间隔
 
         private SchemaItem                   schemaItem;                             // sql解析结果模型
+        
+        private boolean 					 forceUpdate	 = false;				 // 强制全部更新
 
         public String get_index() {
             return _index;
@@ -215,6 +217,15 @@ public class ESSyncConfig implements AdapterConfig {
         public void setSchemaItem(SchemaItem schemaItem) {
             this.schemaItem = schemaItem;
         }
+
+		public boolean isForceUpdate() {
+			return forceUpdate;
+		}
+
+		public void setForceUpdate(boolean forceUpdate) {
+			this.forceUpdate = forceUpdate;
+		}
+        
     }
 
     public static class RelationMapping {
