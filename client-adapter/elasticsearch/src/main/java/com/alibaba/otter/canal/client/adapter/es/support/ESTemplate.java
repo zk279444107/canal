@@ -167,6 +167,46 @@ public class ESTemplate {
             logger.trace("Update ES by query affected {} records", syncCount);
         }
     }
+    
+    public void updateByQuery(String exeSql, ESSyncConfig config, Map<String, Object> paramsTmp, Map<String, Object> esFieldData) {
+        if (paramsTmp.isEmpty()) {
+            return;
+        }
+        ESMapping mapping = config.getEsMapping();
+        BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
+        paramsTmp.forEach((fieldName, value) -> queryBuilder.must(QueryBuilders.termsQuery(fieldName, value)));
+
+        // 查询sql批量更新
+        DataSource ds = DatasourceConfig.DATA_SOURCES.get(config.getDataSourceKey());
+        if(StringUtils.isBlank(exeSql)) {
+        	exeSql = mapping.getSql();
+        }
+        StringBuilder sql = new StringBuilder("SELECT * FROM (" + exeSql + ") _v WHERE ");
+        List<Object> values = new ArrayList<>();
+        paramsTmp.forEach((fieldName, value) -> {
+            sql.append("_v.").append(fieldName).append("=? AND ");
+            values.add(value);
+        });
+        int len = sql.length();
+        sql.delete(len - 4, len);
+        Integer syncCount = (Integer) Util.sqlRS(ds, sql.toString(), values, rs -> {
+            int count = 0;
+            try {
+                while (rs.next()) {
+                    Object idVal = getIdValFromRS(mapping, rs);
+                    append4Update(mapping, idVal, esFieldData);
+                    commitBulk();
+                    count++;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            return count;
+        });
+        if (logger.isTraceEnabled()) {
+            logger.trace("Update ES by query affected {} records", syncCount);
+        }
+    }
 
     /**
      * 通过主键删除数据
@@ -337,6 +377,11 @@ public class ESTemplate {
                         getValFromRS(mapping, resultSet, fieldItem.getFieldName(), fieldItem.getFieldName()));
                     break;
                 }
+            }
+            
+            if(fieldItem.getColumnItems().isEmpty()) {
+            	esFieldData.put(Util.cleanColumn(fieldItem.getFieldName()),
+                        getValFromRS(mapping, resultSet, fieldItem.getFieldName(), fieldItem.getFieldName()));
             }
         }
 

@@ -44,7 +44,7 @@ public class TestConstant {
         goods_dataSource.setPassword("sys_market_test");
         goods_dataSource.setInitialSize(1);
         goods_dataSource.setMinIdle(1);
-        goods_dataSource.setMaxActive(1);
+        goods_dataSource.setMaxActive(5);
         goods_dataSource.setMaxWait(60000);
         goods_dataSource.setTimeBetweenEvictionRunsMillis(60000);
         goods_dataSource.setMinEvictableIdleTimeMillis(300000);

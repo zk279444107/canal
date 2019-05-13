@@ -759,7 +759,7 @@ public class ESSyncService {
                             dml.getTable(),
                             mapping.get_index());
                     }
-                    esTemplate.updateByQuery(config, paramsTmp, esFieldData);
+                    esTemplate.updateByQuery(sql.toString(), config, paramsTmp, esFieldData);
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
