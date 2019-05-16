@@ -15,6 +15,7 @@ public class TestConstant {
 
 	public final static DruidDataSource dataSource;
 	public final static DruidDataSource goods_dataSource;
+	public final static DruidDataSource store_dataSource;
 
     static {
         dataSource = new DruidDataSource();
@@ -51,6 +52,26 @@ public class TestConstant {
         goods_dataSource.setPoolPreparedStatements(false);
         goods_dataSource.setMaxPoolPreparedStatementPerConnectionSize(20);
         goods_dataSource.setValidationQuery("select 1");
+        try {
+        	goods_dataSource.init();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        store_dataSource = new DruidDataSource();
+        store_dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        store_dataSource.setUrl("jdbc:mysql://10.200.53.65:3306/bbg_plat_sp?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&zeroDateTimeBehavior=convertToNull&useAffectedRows=true");
+        store_dataSource.setUsername("sys_market_test");
+        store_dataSource.setPassword("sys_market_test");
+        store_dataSource.setInitialSize(1);
+        store_dataSource.setMinIdle(1);
+        store_dataSource.setMaxActive(5);
+        store_dataSource.setMaxWait(60000);
+        store_dataSource.setTimeBetweenEvictionRunsMillis(60000);
+        store_dataSource.setMinEvictableIdleTimeMillis(300000);
+        store_dataSource.setPoolPreparedStatements(false);
+        store_dataSource.setMaxPoolPreparedStatementPerConnectionSize(20);
+        store_dataSource.setValidationQuery("select 1");
         try {
         	goods_dataSource.init();
         } catch (SQLException e) {

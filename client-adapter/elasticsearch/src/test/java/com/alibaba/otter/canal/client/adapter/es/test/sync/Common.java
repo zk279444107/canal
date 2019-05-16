@@ -19,6 +19,7 @@ public class Common {
         DatasourceConfig.DATA_SOURCES.put("defaultDS", TestConstant.dataSource);
         DatasourceConfig.DATA_SOURCES.put("tradeDS", TestConstant.dataSource);
         DatasourceConfig.DATA_SOURCES.put("goodsDS", TestConstant.goods_dataSource);
+        DatasourceConfig.DATA_SOURCES.put("storeDS", TestConstant.store_dataSource);
         
         OuterAdapterConfig outerAdapterConfig = new OuterAdapterConfig();
         outerAdapterConfig.setName("es");

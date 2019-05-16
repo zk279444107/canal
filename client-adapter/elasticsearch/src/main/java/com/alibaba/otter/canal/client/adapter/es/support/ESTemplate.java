@@ -327,6 +327,11 @@ public class ESTemplate {
                 resultIdVal = getValFromRS(mapping, resultSet, fieldItem.getFieldName(), fieldItem.getFieldName());
             }
 
+            if (mapping.getUpdateFields().contains(fieldItem.getFieldName())) {
+				esFieldData.put(Util.cleanColumn(fieldItem.getFieldName()),
+						getValFromRS(mapping, resultSet, fieldItem.getFieldName(), fieldItem.getFieldName()));
+			}
+            
             for (ColumnItem columnItem : fieldItem.getColumnItems()) {
                 if (dmlOld.containsKey(columnItem.getColumnName())
                     && !mapping.getSkips().contains(fieldItem.getFieldName())) {
