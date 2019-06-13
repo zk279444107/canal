@@ -106,6 +106,7 @@ public class ESSyncConfig implements AdapterConfig {
         
         private boolean 					 forceUpdate	 = false;				 // 强制全部更新
         private List<String>                 updateFields    = new ArrayList<>();	 // 强制同步非简单字段,主键非简单字段有效
+        private boolean						 directJoin      = false;                // 关联直接查询
         
         public String get_index() {
             return _index;
@@ -233,6 +234,14 @@ public class ESSyncConfig implements AdapterConfig {
 
 		public void setUpdateFields(List<String> updateFields) {
 			this.updateFields = updateFields;
+		}
+
+		public boolean isDirectJoin() {
+			return directJoin;
+		}
+
+		public void setDirectJoin(boolean directJoin) {
+			this.directJoin = directJoin;
 		}
         
     }

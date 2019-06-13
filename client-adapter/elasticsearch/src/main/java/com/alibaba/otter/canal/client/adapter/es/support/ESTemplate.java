@@ -137,12 +137,22 @@ public class ESTemplate {
 
         // 查询sql批量更新
         DataSource ds = DatasourceConfig.DATA_SOURCES.get(config.getDataSourceKey());
-        StringBuilder sql = new StringBuilder("SELECT * FROM (" + mapping.getSql() + ") _v WHERE ");
+        
+        StringBuilder sql = new StringBuilder();
         List<Object> values = new ArrayList<>();
-        paramsTmp.forEach((fieldName, value) -> {
-            sql.append("_v.").append(fieldName).append("=? AND ");
-            values.add(value);
-        });
+        if(mapping.isDirectJoin()) {
+	        sql.append(mapping.getSql() + " WHERE ");
+	        paramsTmp.forEach((fieldName, value) -> {
+	            sql.append(fieldName).append("=? AND ");
+	            values.add(value);
+	        });
+        }else {
+	        sql.append("SELECT * FROM (" + mapping.getSql() + ") _v WHERE ");
+	        paramsTmp.forEach((fieldName, value) -> {
+	            sql.append("_v.").append(fieldName).append("=? AND ");
+	            values.add(value);
+	        });
+        }
         //TODO 直接外部包裹sql会导致全表扫描性能低, 待优化拼接内部where条件
         int len = sql.length();
         sql.delete(len - 4, len);

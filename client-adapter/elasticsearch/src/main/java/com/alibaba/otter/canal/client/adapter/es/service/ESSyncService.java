@@ -555,7 +555,12 @@ public class ESSyncService {
                     if (fieldName.equals(mapping.get_id())) {
                         fieldName = "_id";
                     }
-                    paramsTmp.put(fieldName, value);
+                    if(mapping.isDirectJoin()) {
+                    	fieldName = fieldItem.getColumnItems().get(0).getOwner() + "." + fieldItem.getColumnItems().get(0).getColumnName();
+                    	paramsTmp.put(fieldName, value);
+                    } else {
+                    	paramsTmp.put(fieldName, value);
+                    }
                 }
             }
         }
