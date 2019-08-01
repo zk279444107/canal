@@ -1,11 +1,18 @@
 package com.alibaba.otter.canal.client.adapter.es;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,6 +24,8 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.otter.canal.client.adapter.OuterAdapter;
@@ -29,7 +38,12 @@ import com.alibaba.otter.canal.client.adapter.es.monitor.ESConfigMonitor;
 import com.alibaba.otter.canal.client.adapter.es.service.ESEtlService;
 import com.alibaba.otter.canal.client.adapter.es.service.ESSyncService;
 import com.alibaba.otter.canal.client.adapter.es.support.ESTemplate;
-import com.alibaba.otter.canal.client.adapter.support.*;
+import com.alibaba.otter.canal.client.adapter.support.DatasourceConfig;
+import com.alibaba.otter.canal.client.adapter.support.Dml;
+import com.alibaba.otter.canal.client.adapter.support.EtlResult;
+import com.alibaba.otter.canal.client.adapter.support.OuterAdapterConfig;
+import com.alibaba.otter.canal.client.adapter.support.SPI;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * ES外部适配器
@@ -40,6 +54,8 @@ import com.alibaba.otter.canal.client.adapter.support.*;
 @SPI("es")
 public class ESAdapter implements OuterAdapter {
 
+	private final Logger 						   logger  = LoggerFactory.getLogger(this.getClass());
+	
     private Map<String, ESSyncConfig>              esSyncConfig        = new ConcurrentHashMap<>(); // 文件名对应配置
     private Map<String, Map<String, ESSyncConfig>> dbTableEsSyncConfig = new ConcurrentHashMap<>(); // schema-table对应配置
 
@@ -50,6 +66,23 @@ public class ESAdapter implements OuterAdapter {
     private ESConfigMonitor                        esConfigMonitor;
 
     private Properties                             envProperties;
+    
+	private static ThreadFactory newGenericThreadFactory(String processName) {
+		return new ThreadFactoryBuilder().setNameFormat(processName + "-%d").setDaemon(false).build();
+	}
+
+	private ExecutorService syncExecutorService = new ThreadPoolExecutor(5, 25, 60L, TimeUnit.SECONDS,
+			new LinkedBlockingQueue<Runnable>(5000), newGenericThreadFactory("ESAdapter-sync"), (r, exe) -> {
+				if (!exe.isShutdown()) {
+					try {
+						exe.getQueue().put(r);
+					} catch (InterruptedException e) {
+						// ignore
+					} catch (Exception e) {
+						logger.error("syncExecutorService,size:{},rejected from:{}", exe.getQueue().size(), e);
+					}
+				}
+			});
 
     public TransportClient getTransportClient() {
         return transportClient;
@@ -141,16 +174,42 @@ public class ESAdapter implements OuterAdapter {
 
     @Override
     public void sync(List<Dml> dmls) {
-        if (dmls == null || dmls.isEmpty()) {
-            return;
-        }
-        for (Dml dml : dmls) {
-            if (!dml.getIsDdl()) {
-                sync(dml);
-            }
-        }
-        esSyncService.commit(); // 批次统一提交
+		if (dmls == null || dmls.isEmpty()) {
+			return;
+		}
+		List<Future<Boolean>> futures = new ArrayList<>();
+		for (Dml dml : dmls) {
+			if (!dml.getIsDdl()) {
+				// 增加线程池处理
+				futures.add(syncExecutorService.submit(() -> {
+					try {
+						sync(dml);
+						return true;
+					} catch (Exception e) {
+						logger.error(e.getMessage(), e);
+						return false;
+					}
+				}));
+			}
+		}
 
+		// 等待所有并发完成
+		RuntimeException exception = null;
+		for (Future<Boolean> future : futures) {
+			try {
+				if (!future.get()) {
+					exception = new RuntimeException("syncExecutorService failed! ");
+				}
+			} catch (Exception e) {
+				exception = new RuntimeException(e);
+			}
+		}
+		
+		esSyncService.commit(); // 批次统一提交
+		
+		if (exception != null) {
+			throw exception;
+		}
     }
 
     private void sync(Dml dml) {

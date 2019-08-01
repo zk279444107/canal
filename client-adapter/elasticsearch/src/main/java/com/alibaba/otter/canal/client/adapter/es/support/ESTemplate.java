@@ -205,32 +205,43 @@ public class ESTemplate {
      * 提交批次
      */
     public void commit() {
-        if (getBulk().numberOfActions() > 0) {
-            BulkResponse response = getBulk().execute().actionGet();
-            if (response.hasFailures()) {
-                for (BulkItemResponse itemResponse : response.getItems()) {
-                    if (!itemResponse.isFailed()) {
-                        continue;
-                    }
+		try {
+//			synchronized (ESTemplate.class) {
+				if (getBulk().numberOfActions() > 0) {
+					BulkResponse response = getBulk().execute().actionGet();
+					if (response.hasFailures()) {
+						for (BulkItemResponse itemResponse : response.getItems()) {
+							if (!itemResponse.isFailed()) {
+								continue;
+							}
 
-                    if (itemResponse.getFailure().getStatus() == RestStatus.NOT_FOUND) {
-                        logger.error(itemResponse.getFailureMessage());
-                    } else {
-                        throw new RuntimeException("ES sync commit error" + itemResponse.getFailureMessage());
-                    }
-                }
-            }
-        }
+							if (itemResponse.getFailure().getStatus() == RestStatus.NOT_FOUND) {
+								logger.error(itemResponse.getFailureMessage());
+							} else {
+								throw new RuntimeException("ES sync commit error" + itemResponse.getFailureMessage());
+							}
+						}
+					}
+				}
+
+				if (getBulk().numberOfActions() >= MAX_BATCH_SIZE) {
+					resetBulkRequestBuilder();
+				}
+//			}
+		} catch (Exception e) {
+			logger.error("commit:{}", getBulk().numberOfActions(), e);
+			throw e;
+		}
     }
 
     /**
      * 如果大于批量数则提交批次, 调用后es bulk请求后，numberOfActions不会清理，需要主动调用函数清0，否则不能起到批量请求的效果
      */
     private void commitBulk() {
-        if (getBulk().numberOfActions() >= MAX_BATCH_SIZE) {
-            commit();
-            resetBulkRequestBuilder();
-        }
+//        if (getBulk().numberOfActions() >= MAX_BATCH_SIZE) {
+//            commit();
+//            resetBulkRequestBuilder();
+//        }
     }
 
     private void append4Update(ESMapping mapping, Object pkVal, Map<String, Object> esFieldData) {

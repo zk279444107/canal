@@ -60,7 +60,7 @@ public class AdapterCanalConfig extends CanalClientConfig {
                 ds.setUrl(datasourceConfig.getUrl());
                 ds.setUsername(datasourceConfig.getUsername());
                 ds.setPassword(datasourceConfig.getPassword());
-                ds.setInitialSize(1);
+                ds.setInitialSize(15);
                 ds.setMinIdle(1);
                 ds.setMaxActive(datasourceConfig.getMaxActive());
                 ds.setMaxWait(60000);
