@@ -10,7 +10,7 @@ public class TestConstant {
 	public final static String jdbcUser = "sys_market_test";
 	public final static String jdbcPassword = "sys_market_test";
 
-	public final static String esHosts = "10.200.53.24:9300,10.200.53.34:9300";
+	public final static String esHosts = "10.200.53.142:9300";
 	public final static String clusterName = "bbg-es";
 
 	public final static DruidDataSource dataSource;
@@ -60,9 +60,9 @@ public class TestConstant {
         
         store_dataSource = new DruidDataSource();
         store_dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-        store_dataSource.setUrl("jdbc:mysql://10.200.53.65:3306/bbg_plat_sp?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&zeroDateTimeBehavior=convertToNull&useAffectedRows=true");
-        store_dataSource.setUsername("sys_market_test");
-        store_dataSource.setPassword("sys_market_test");
+        store_dataSource.setUrl("jdbc:mysql://10.200.53.144:3306/bbg_plat_sp?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&zeroDateTimeBehavior=convertToNull&useAffectedRows=true");
+        store_dataSource.setUsername("selected_preview");
+        store_dataSource.setPassword("selected_preview");
         store_dataSource.setInitialSize(1);
         store_dataSource.setMinIdle(1);
         store_dataSource.setMaxActive(5);
