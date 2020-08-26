@@ -417,7 +417,7 @@ public class ESConnection {
                 return bulkRequestBuilder.execute().actionGet();
             } else {
                 try {
-                    return restHighLevelClient.bulk(bulkRequest);
+                    return restHighLevelClient.bulk(bulkRequest,RequestOptions.DEFAULT);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
